@@ -2,7 +2,7 @@ CC=gcc
 CPP=g++
 CFLAGS=-c -Wall -fPIC -m32 -O3
 # CFLAGS=-c -Wall -fPIC -m32 -g
-CXXFLAGS=
+CXXFLAGS=--std=c++0x
 LDFLAGS=-shared -m32
 CSOURCES=
 CXXSOURCES=											\

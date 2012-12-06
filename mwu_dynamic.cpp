@@ -58,10 +58,6 @@ namespace {
     std::vector<double> l11_, l12_;
   };
 
-  bool is_pos(double x) { return (x > 0.0); }
-
-  bool is_neg(double x) { return (x < 0.0); }
-
   bool oracle(std::pair<int, int> & alhat_idx, // OUTPUT
               const std::vector<double> & g,   // INPUT
               const int * const y,             // INPUT
@@ -73,18 +69,15 @@ namespace {
     int n = g.size();
 
     int pidx = -1, nidx = -1;
-    int pcnt = 0, ncnt = 0;
 
     for( int j = 0; j < n; ++j ) {
       if (y[j] > 0) {
-        ++pcnt;
         if (g[j] > pmax) {
           pidx = j;
           pmax = g[j];
         }
       }
       else {
-        ++ncnt;
         if (g[j] > nmax) {
           nidx = j;
           nmax = g[j];
@@ -120,13 +113,13 @@ namespace {
     std::transform(alGal.begin(), alGal.end(), normu.begin(), 
                    (double (*)(double)) &std::sqrt);
 
-    double coeff = -epsp/(2*rho); // always negative
+    // const double coeff = -epsp/(2*rho); // always negative
+    // const double acoeff = std::abs(coeff);
+    const double acoeff = epsp/(2*rho);
 
     std::vector<double> ps(m,0.0);
-
-    for( int i = 0; i < m; ++i ) {
-      ps[i] = std::abs(coeff)*normu[i];
-    }
+    std::transform(normu.begin(), normu.end(), ps.begin(), 
+        [&](double nmu){ return acoeff * nmu; });
 
     // For large x, sinh(x) and cosh(x) are essentially exp(x) 
     // -- this will also overflow for large x, so quash it
@@ -230,8 +223,10 @@ namespace {
       }
     }
     
-    std::binder2nd< std::divides<double> > 
-      divide_tau( std::divides<double>(), tau );
+    auto divide_tau = [&](double x){ return x/tau; };
+    // std::binder2nd< std::divides<double> > 
+    //   divide_tau( std::divides<double>(), tau );
+    
     std::transform(alpha, alpha+n, alpha, divide_tau);
 
     std::transform(Galpha.begin(), Galpha.end(), Galpha.begin(),
@@ -362,14 +357,16 @@ void run_mwu_cpp_dynamic(// OUTPUT
   }
 
   // compute posw
-  int psupp = 0, nsupp = 0;
-  for( int j = 0; j < n; ++j ) {
-    if (alpha[j] != 0.0) {
-      posw[j] = 1;
-      if (y[j] > 0) { ++psupp; }
-      if (y[j] < 0) { ++nsupp; }
-    }
-  }
+  int nsupp = std::count_if(alpha, alpha+n, 
+    [](double a){return a!=0.0;});
+  // int psupp = 0, nsupp = 0;
+  // for( int j = 0; j < n; ++j ) {
+  //   if (alpha[j] != 0.0) {
+  //     posw[j] = 1;
+  //     if (y[j] > 0) { ++psupp; }
+  //     if (y[j] < 0) { ++nsupp; }
+  //   }
+  // }
 
   std::vector<double> mu(m,0.0);
   double mu_sum = 0.0;
@@ -384,7 +381,8 @@ void run_mwu_cpp_dynamic(// OUTPUT
   VERBOSE(1) << "\n" << std::flush;
   // mu = mu/mu_sum
   std::transform(mu.begin(), mu.end(), mu.begin(), 
-                 std::bind2nd(std::divides<double>(), mu_sum));
+                 [&](double x){ return x/mu_sum; });
+  //                std::bind2nd(std::divides<double>(), mu_sum));
 
   // Recompute g
   g.assign(n,0.0);
@@ -419,9 +417,11 @@ void run_mwu_cpp_dynamic(// OUTPUT
   }
 
   // compute Sigma
-  for (int i = 0; i < m; ++i) {
-    Sigma[i] = c*mu[i]/r[i];
-  }
+  std::transform(mu.begin(),mu.end(),r.begin(),Sigma, 
+    [c](double mu, double r){ return c*mu/r; });
+  // for (int i = 0; i < m; ++i) {
+  //   Sigma[i] = c*mu[i]/r[i];
+  // }
 
   VERBOSE(2) << "mu:";
   VERBOSE_ITER(2, mu.begin(), mu.end(), double, " ");
@@ -437,7 +437,7 @@ void run_mwu_cpp_dynamic(// OUTPUT
              << std::setw(10) << "H(mu)" << " | "
              << std::setw(10) << "H(mu_sel)" << "\n";
 
-  VERBOSE(1) << std::setw(8) << 100*(psupp + nsupp)/((double)n) << " % | "
+  VERBOSE(1) << std::setw(8) << 100*nsupp/double(n) << " % | "
              << std::setw(10) << *bsvm << " | "
              << std::setw(10) << 1/scale << " | "
              << std::setw(10) << mu_ent/std::log(m) << " | "
