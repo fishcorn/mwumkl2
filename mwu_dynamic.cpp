@@ -248,6 +248,7 @@ namespace {
 
     return true;
   }
+}
 
 /*
   void run_mwu_cpp_dynamic(...);
