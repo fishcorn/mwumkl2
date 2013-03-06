@@ -62,6 +62,27 @@ namespace {
 
   bool is_neg(double x) { return (x < 0.0); }
 
+  const double & id_fun(const double & x) { return x; }
+
+  template < typename Iter, typename Fun >
+  double entropy(Iter b, Iter e, Fun f) 
+  {
+    double ent = 0.0, sum = 0.0;
+    int count = e - b;
+    for (; b != e; ++b) {
+      const double & el = f(*b);
+      if (el <= 0.0) continue;
+      sum += el;
+      ent += - el*std::log(el);
+    }
+    ent /= sum;
+    ent += std::log(sum);
+    ent /= std::log(count);
+    return ent;
+  }
+
+  template < typename Iter >
+  double entropy(Iter b, Iter e) { return entropy(b, e, &id_fun); }
   bool oracle(std::pair<int, int> & alhat_idx, // OUTPUT
               const std::vector<double> & g,   // INPUT
               const int * const y,             // INPUT
@@ -107,7 +128,6 @@ namespace {
 
   void exponentiateM(primal_var & L,                     // OUTPUT
                      const std::vector<double> & alGal,  // INPUT
-                     const std::vector<double> & Galpha, // INPUT
                      const int n,                        // INPUT
                      const int m,                        // INPUT
                      const double rho,                   // INPUT
@@ -121,11 +141,12 @@ namespace {
                    (double (*)(double)) &std::sqrt);
 
     double coeff = -epsp/(2*rho); // always negative
+    double acoeff = std::abs(coeff);
 
     std::vector<double> ps(m,0.0);
 
     for( int i = 0; i < m; ++i ) {
-      ps[i] = std::abs(coeff)*normu[i];
+      ps[i] = acoeff*normu[i];
     }
 
     // For large x, sinh(x) and cosh(x) are essentially exp(x) 
@@ -220,12 +241,14 @@ namespace {
         alGal[i] += Galpha[i*n + j2] * 0.5;
       }
 
-      exponentiateM(L, alGal, Galpha, n, m, rho, epsp, t, cutoff, verbose);
+      exponentiateM(L, alGal, n, m, rho, epsp, t, cutoff, verbose);
 
       g.assign(n, 0.0);
       for( int i = 0; i < m; ++i ) {
+        double p = L.l12()[i];
+        double q = std::sqrt(alGal[i]);
         for( int j = 0; j < n; ++j ) {
-          g[j] += Galpha[i*n + j] * 2*L.l12()[i]/sqrt(alGal[i]);
+          g[j] += 2*p/q * Galpha[i*n + j];
         }
       }
     }
@@ -373,15 +396,12 @@ void run_mwu_cpp_dynamic(// OUTPUT
 
   std::vector<double> mu(m,0.0);
   double mu_sum = 0.0;
-  // TODO Need to look at these to find constraints that are tight, and only keep those
-  // Compute mu
-  VERBOSE(1) << "Kernels (phase 1):";
   for (int i = 0; i < m; ++i) {
-    VERBOSE(1) << "+";
-    mu[i] = -2*L.l12()[i]/std::sqrt(alGal[i]); // the l12 are negative
+    double p = -L.l12()[i]; // the l12 are negative
+    double q = std::sqrt(alGal[i]);
+    mu[i] = 2*p/q;
     mu_sum += mu[i];
   }
-  VERBOSE(1) << "\n" << std::flush;
   // mu = mu/mu_sum
   std::transform(mu.begin(), mu.end(), mu.begin(), 
                  std::bind2nd(std::divides<double>(), mu_sum));
@@ -410,13 +430,8 @@ void run_mwu_cpp_dynamic(// OUTPUT
   }
 
   // Give an idea of how mu looks
-  double mu_ent = 0.0;
-  int mu_cnt = 0;
-  for (int i = 0; i < m; ++i) {
-    if (mu[i] == 0.0) continue;
-    ++mu_cnt;
-    mu_ent -= mu[i] * std::log(mu[i]);
-  }
+  double mu_ent = entropy(mu.begin(), mu.end());
+  int mu_cnt = count_if(mu.begin(), mu.end(), std::bind2nd(std::greater<double>(),0.0));
 
   // compute Sigma
   for (int i = 0; i < m; ++i) {
@@ -432,16 +447,18 @@ void run_mwu_cpp_dynamic(// OUTPUT
   VERBOSE(2) << "\n" << std::flush;
 
   VERBOSE(1) << std::setw(10) << "supp" << " | "
+    //             << std::setw(10) << "gap" << " | "
              << std::setw(10) << "bsvm" << " | "
              << std::setw(10) << "|omega|" << " | "
              << std::setw(10) << "H(mu)" << " | "
              << std::setw(10) << "H(mu_sel)" << "\n";
 
   VERBOSE(1) << std::setw(8) << 100*(psupp + nsupp)/((double)n) << " % | "
+    //             << std::setw(10) << curr_gap << " | "
              << std::setw(10) << *bsvm << " | "
              << std::setw(10) << 1/scale << " | "
-             << std::setw(10) << mu_ent/std::log(m) << " | "
-             << std::setw(10) << mu_ent/std::log(mu_cnt) << "\n" 
+             << std::setw(10) << mu_ent << " | "
+             << std::setw(10) << mu_ent*std::log(m)/std::log(mu_cnt) << "\n" 
              << std::flush;
 
   return;
