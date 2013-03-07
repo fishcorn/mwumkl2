@@ -1,0 +1,68 @@
+#! /usr/bin/env python
+
+# System imports
+from   distutils.util import get_platform
+import os
+import sys
+import unittest
+
+# Import NumPy
+import numpy as np
+major, minor = [ int(d) for d in np.__version__.split(".")[:2] ]
+if major == 0:
+    BadListError = TypeError
+else:
+    BadListError = ValueError
+
+from mwumkl import test_mkl
+
+######################################################################
+
+class TestMKL1TestCase(unittest.TestCase):
+
+    def setUp(self):
+        return
+
+    def testSimpleMargin1(self):
+        "Test against two 1-dimensional support points, 1 kernel (linear)"
+        Sigma = np.array([1.]); # 1 kernel, weight 1.0
+        alpha = np.array([1.,1.])/2; # 2 support points of equal weight
+        kerns = np.array([0], dtype='int32'); # 1 linear kernel
+        params = np.array([0.]); # params not important
+        features = np.array([-1], dtype='int32'); # use all features, but there's only 1
+        Xtr = np.array([[-2.,2.]]); # support points
+        Xte = Xtr/2; # test points
+        ytr = np.array([-1,1], dtype='int32'); # labels
+        results = test_mkl(Sigma, alpha, kerns, params, features, Xtr, Xte, ytr)
+        self.assertTrue((np.sign(results) == ytr).all(), 
+                        msg='results={0}, ytr={1}'.format(results, ytr))
+
+    def testSimpleMargin2(self):
+        "Test against four 2-dimensional support points (XOR), 1 kernel (quad)"
+        Sigma = np.array([1.]); # 1 kernel, weight 1.0
+        alpha = np.array([1.,1.,1.,1.])/4; # 4 support points of equal weight
+        kerns = np.array([1], dtype='int32'); # 1 polynomial kernel
+        params = np.array([2.]); # quadratic
+        features = np.array([-1], dtype='int32'); # use all features, but there's only 1
+        Xtr = np.array([[-2.,2.,-2.,2.],
+                        [-2.,-2.,2.,2.]]); # support points
+        Xte = Xtr/2; # test points
+        ytr = np.array([-1,1,1,-1], dtype='int32'); # labels
+        results = test_mkl(Sigma, alpha, kerns, params, features, Xtr, Xte, ytr)
+        self.assertTrue((np.sign(results) == ytr).all(), 
+                        msg='results={0}, ytr={1}'.format(results, ytr))
+
+######################################################################
+
+if __name__ == "__main__":
+
+    # Build the test suite
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(TestMKL1TestCase))
+
+    # Execute the test suite
+    print "Testing Classes of Module mwumkl"
+    print "NumPy version", np.__version__
+    print
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    sys.exit(len(result.errors) + len(result.failures))

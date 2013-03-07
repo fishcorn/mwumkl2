@@ -39,8 +39,8 @@ import_array();
     (int * _feature_sel, int dim_feature_sel),
     (int * _ytr, int dim_ytr) }
 
-%rename (train_mwu_mkl) run_wrapper;
-%rename (test_mkl) test_wrapper;
+%rename (_train_mwu_mkl) run_wrapper;
+%rename (_test_mkl) test_wrapper;
 
 %inline%{
   void run_wrapper(int * _success_out,
@@ -168,4 +168,47 @@ import_array();
                          d, ntr, nte, m, 
                          verbose);
   }
+%}
+ 
+%pythoncode %{
+    def train_mwu_mkl(kerns, kern_params, features, 
+                      Xtr, ytr,
+                      eps = 0.2, C = 1000.0, 
+                      verbose = 0):
+        """
+        (success, Sigma, alpha, bsvm, posw) = 
+        train_mwu_mkl(
+          kerns, kern_params, features, 
+          Xtr, ytr, 
+          eps = 0.2, C = 1000.0, verbose = 0
+        )
+        """
+        m = kerns.shape()
+        (ntr,d) = Xtr.shape()
+        return _train_mwu_mkl(m, ntr, ntr, 
+                              kerns, kern_params, features, 
+                              Xtr, ytr, d, ntr, m, 
+                              eps, 1.0, 20.0, C, 2, 
+                              verbose)
+
+    def test_mkl(Sigma, alpha, 
+                 kerns, kern_params, feature_sel, 
+                 Xtr, Xte, ytr, 
+                 verbose = 0):
+        """
+        (results) = test_mkl(
+                      Sigma, alpha, 
+                      kerns, kern_params, feature_sel, 
+                      Xtr, Xte, ytr, 
+                      verbose = 0)
+        """
+        (m,) = kerns.shape
+        (d, ntr) = Xtr.shape
+        (d, nte) = Xte.shape
+        return _test_mkl(nte, 
+                         Sigma, alpha, 
+                         kerns, kern_params, feature_sel, 
+                         Xtr, Xte, ytr, 
+                         d, ntr, nte, m, 
+                         verbose)
 %}

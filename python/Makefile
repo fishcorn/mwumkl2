@@ -11,12 +11,7 @@ all: $(WRAPPERS) ../mwu_dynamic.cpp ../kernel.hpp ../mwu_main.h
 # Test target: run the tests
 .PHONY : test
 test: all
-	# python testVector.py
-	# python testMatrix.py
-	# python testTensor.py
-	# python testArray.py
-	# python testFarray.py
-	# python testFortran.py
+	python testTestMKL.py
 
 # Rule: %.i -> %_wrap.cxx
 %_wrap.cxx: %.i ../%.h numpy.i
