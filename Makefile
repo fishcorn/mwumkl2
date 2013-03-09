@@ -23,7 +23,7 @@ $(LIBRARYNAME): $(OBJECTS)
 .cpp.o: 
 	$(CPP) $(CFLAGS) $(CXXFLAGS) $< -o $@
 
-.PHONY: clean cleanobj cleanso python python-clean
+.PHONY: clean cleanobj cleanso python python-clean allclean
 
 python: 
 	cd python && make 
