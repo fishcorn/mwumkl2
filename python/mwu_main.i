@@ -173,7 +173,7 @@ import_array();
 %pythoncode %{
     def train_mwu_mkl(kerns, kern_params, features, 
                       Xtr, ytr,
-                      eps = 0.2, C = 1000.0, 
+                      eps = 0.2, C = 1000.0, norm1or2 = 2, 
                       verbose = 0):
         """
         (success, Sigma, alpha, bsvm, posw) = 
@@ -183,12 +183,12 @@ import_array();
           eps = 0.2, C = 1000.0, verbose = 0
         )
         """
-        m = kerns.shape()
-        (ntr,d) = Xtr.shape()
+        (m,) = kerns.shape
+        (d,ntr) = Xtr.shape
         return _train_mwu_mkl(m, ntr, ntr, 
                               kerns, kern_params, features, 
                               Xtr, ytr, d, ntr, m, 
-                              eps, 1.0, 20.0, C, 2, 
+                              eps, 1.0, 20.0, C, norm1or2, 
                               verbose)
 
     def test_mkl(Sigma, alpha, 

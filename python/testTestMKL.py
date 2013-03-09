@@ -14,7 +14,7 @@ if major == 0:
 else:
     BadListError = ValueError
 
-from mwumkl import test_mkl
+from mwumkl import test_mkl, train_mwu_mkl
 
 ######################################################################
 
@@ -24,7 +24,7 @@ class TestMKL1TestCase(unittest.TestCase):
         return
 
     def testSimpleMargin1(self):
-        "Test against two 1-dimensional support points, 1 kernel (linear)"
+        "Test against two 1-dimensional support points (SIGN), 1 kernel (linear)"
         Sigma = np.array([1.]); # 1 kernel, weight 1.0
         alpha = np.array([1.,1.])/2; # 2 support points of equal weight
         kerns = np.array([0], dtype='int32'); # 1 linear kernel
@@ -43,7 +43,7 @@ class TestMKL1TestCase(unittest.TestCase):
         alpha = np.array([1.,1.,1.,1.])/4; # 4 support points of equal weight
         kerns = np.array([1], dtype='int32'); # 1 polynomial kernel
         params = np.array([2.]); # quadratic
-        features = np.array([-1], dtype='int32'); # use all features, but there's only 1
+        features = np.array([-1], dtype='int32'); # use all features
         Xtr = np.array([[-2.,2.,-2.,2.],
                         [-2.,-2.,2.,2.]]); # support points
         Xte = Xtr/2; # test points
@@ -54,11 +54,48 @@ class TestMKL1TestCase(unittest.TestCase):
 
 ######################################################################
 
+class TrainMKL1TestCase(unittest.TestCase):
+
+    def setUp(self):
+        return
+
+    def testSimpleTrain1(self):
+        "Two 1-dimensional input points (SIGN), 1 kernel (linear)"
+        kerns = np.array([0], dtype='int32'); # 1 linear kernel
+        params = np.array([0.]); # params not important
+        features = np.array([-1], dtype='int32'); # use all features, but there's only 1
+        Xtr = np.array([[-2.,2.]]); # support points
+        ytr = np.array([-1,1], dtype='int32'); # labels
+        (success, Sigma, alpha, bsvm, posw) = train_mwu_mkl(kerns, params, features, Xtr, ytr)
+        self.assertTrue(success)
+        self.assertTrue((posw == 1).all(), msg='posw={0}'.format(posw))
+        self.assertTrue((Sigma > 0).all(), msg='Sigma={0}'.format(Sigma))
+        self.assertTrue((alpha >= 0).all(), msg='alpha={0}'.format(alpha))
+        self.assertAlmostEqual(bsvm, 0.0, msg='bsvm={0}'.format(bsvm))
+
+    def testSimpleTrain2(self):
+        "Four 2-dimensional input points (XOR), 1 kernel (quad)"
+        kerns = np.array([1], dtype='int32'); # 1 polynomial kernel
+        params = np.array([2.]); # quadratic
+        features = np.array([-1], dtype='int32'); # use all features, but there's only 1
+        Xtr = np.array([[-2.,2.,-2.,2.],
+                        [-2.,-2.,2.,2.]]); # support points
+        ytr = np.array([-1,1,1,-1], dtype='int32'); # labels
+        (success, Sigma, alpha, bsvm, posw) = train_mwu_mkl(kerns, params, features, Xtr, ytr)
+        self.assertTrue(success)
+        self.assertTrue((posw == 1).all(), msg='posw={0}'.format(posw))
+        self.assertTrue((Sigma > 0).all(), msg='Sigma={0}'.format(Sigma))
+        self.assertTrue((alpha >= 0).all(), msg='alpha={0}'.format(alpha))
+        self.assertAlmostEqual(bsvm, 0.0, msg='bsvm={0}'.format(bsvm))
+
+######################################################################
+
 if __name__ == "__main__":
 
     # Build the test suite
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestMKL1TestCase))
+    suite.addTest(unittest.makeSuite(TrainMKL1TestCase))
 
     # Execute the test suite
     print "Testing Classes of Module mwumkl"
