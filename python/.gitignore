@@ -1,6 +1,2 @@
-# mwumkl.py is an output file
-mwumkl.py
+# mwumkl.pyc is an output file
 mwumkl.pyc
-
-# _wrap.cxx files are generated, but we might want to include them in the future
-*_wrap.cxx
