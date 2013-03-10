@@ -4,13 +4,17 @@ WRAPPERS   = $(INTERFACES:.i=_wrap.cxx)
 PROXIES    = mwumkl.py #$(INTERFACES:.i=.py      )
 
 # Default target: build the extension
+# Add $(PROXIES) as a guard against braindead swig compilation
+# 'make swig' should be done explicitly before 'make' or 'make test'
 .PHONY : all
-all: $(WRAPPERS) ../mwu_dynamic.cpp ../kernel.hpp ../mwu_main.h
+all: $(PROXIES) _mwumkl.so 
+
+_mwumkl.so: $(WRAPPERS) ../mwu_dynamic.cpp ../kernel.hpp ../mwu_main.h
 	./setup.py build_ext -i
 
 # Test target: run the tests
 .PHONY : test
-test: all
+test: all 
 	python testTestMKL.py
 
 # Rule: %.i -> %_wrap.cxx
@@ -26,6 +30,7 @@ clean:
 	$(RM) -r build
 	$(RM) *.so
 
+# USE CAUTION FOR TARGETS AFTER THIS POINT
 # clean everything
 .PHONY : veryclean
 veryclean: clean swigclean
