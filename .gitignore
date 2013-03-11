@@ -12,6 +12,3 @@
 *.la
 *.a
 
-# Emacs autosaves
-*~
-.#*
