@@ -346,6 +346,12 @@ void run_mwu_cpp_dynamic(// OUTPUT
                          int verbose      
                          )
 {
+  // In case we receive dirty arrays (this is the case with swig+numpy)
+  *success = *bsvm = 0;
+  std::fill_n(Sigma, m, 0.0);
+  std::fill_n(alpha, n, 0.0);
+  std::fill_n(posw, n, 0);
+
   std::vector<Kernel *> K(m, (Kernel *)NULL);
   Kernel::MakeKernels(K.begin(), 
                       kerns, kern_params, feature_sel, 
