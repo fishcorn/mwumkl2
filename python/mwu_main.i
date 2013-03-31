@@ -171,7 +171,9 @@ import_array();
 %}
  
 %pythoncode %{
-    def train_mwu_mkl(kerns, kern_params, features, 
+    import numpy as np
+    
+    def train_mwu_mkl(kerns, param, feat, 
                       Xtr, ytr,
                       eps = 0.2, C = 1000.0, norm1or2 = 2, 
                       verbose = 0):
@@ -186,29 +188,38 @@ import_array();
         (m,) = kerns.shape
         (d,ntr) = Xtr.shape
         return _train_mwu_mkl(m, ntr, ntr, 
-                              kerns, kern_params, features, 
-                              Xtr, ytr, d, ntr, m, 
+                              np.require(kerns, dtype = np.int32,   requirements = ['C']), 
+                              np.require(param, dtype = np.float64, requirements = ['C']), 
+                              np.require(feat,  dtype = np.int32,   requirements = ['C']), 
+                              np.require(Xtr,   dtype = np.float64, requirements = ['C']), 
+                              np.require(ytr,   dtype = np.int32,   requirements = ['C']), 
+                              d, ntr, m, 
                               eps, 1.0, 20.0, C, norm1or2, 
                               verbose)
 
-    def test_mkl(Sigma, alpha, 
-                 kerns, kern_params, feature_sel, 
-                 Xtr, Xte, ytr, 
+    def test_mkl(Sigma, alpha_s, 
+                 kerns, param, feat, 
+                 Xtr_s, Xte, ytr_s, 
                  verbose = 0):
         """
         (results) = test_mkl(
                       Sigma, alpha, 
-                      kerns, kern_params, feature_sel, 
-                      Xtr, Xte, ytr, 
+                      kerns, param, feat, 
+                      Xtr_s, Xte, ytr_s, 
                       verbose = 0)
         """
         (m,) = kerns.shape
-        (d, ntr) = Xtr.shape
+        (d, s) = Xtr_s.shape
         (d, nte) = Xte.shape
         return _test_mkl(nte, 
-                         Sigma, alpha, 
-                         kerns, kern_params, feature_sel, 
-                         Xtr, Xte, ytr, 
-                         d, ntr, nte, m, 
+                         np.require(Sigma,   dtype = np.float64, requirements = ['C']),
+                         np.require(alpha_s, dtype = np.float64, requirements = ['C']),
+                         np.require(kerns,   dtype = np.int32,   requirements = ['C']), 
+                         np.require(param,   dtype = np.float64, requirements = ['C']), 
+                         np.require(feat,    dtype = np.int32,   requirements = ['C']), 
+                         np.require(Xtr_s,   dtype = np.float64, requirements = ['C']), 
+                         np.require(Xte,     dtype = np.float64, requirements = ['C']), 
+                         np.require(ytr_s,   dtype = np.int32,   requirements = ['C']), 
+                         d, s, nte, m, 
                          verbose)
 %}
