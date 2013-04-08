@@ -185,13 +185,13 @@ import_array();
           eps = 0.2, C = 1000.0, verbose = 0
         )
         """
+        (m,) = kerns.shape
+        (d,ntr) = Xtr.shape
         in_kerns = np.require(kerns, dtype = np.int32,   requirements = ['C'])
         in_param = np.require(param, dtype = np.float64, requirements = ['C'])
         in_feat  = np.require(feat,  dtype = np.int32,   requirements = ['C'])
         in_Xtr   = np.require(Xtr,   dtype = np.float64, requirements = ['C'])
         in_ytr   = np.require(ytr,   dtype = np.int32,   requirements = ['C'])
-        (m,) = kerns.shape
-        (d,ntr) = Xtr.shape
         return _train_mwu_mkl(m, ntr, ntr, 
                               in_kerns, 
                               in_param, 
@@ -213,6 +213,9 @@ import_array();
                       Xtr_s, Xte, ytr_s, 
                       verbose = 0)
         """
+        (m,) = kerns.shape
+        (d, s) = Xtr_s.shape
+        (d, nte) = Xte.shape
         in_Sigma   = np.require(Sigma,   dtype = np.float64, requirements = ['C'])
         in_alpha_s = np.require(alpha_s, dtype = np.float64, requirements = ['C'])
         in_kerns   = np.require(kerns,   dtype = np.int32,   requirements = ['C'])
@@ -221,9 +224,6 @@ import_array();
         in_Xtr_s   = np.require(Xtr_s,   dtype = np.float64, requirements = ['C'])
         in_Xte     = np.require(Xte,     dtype = np.float64, requirements = ['C'])
         in_ytr_s   = np.require(ytr_s,   dtype = np.int32,   requirements = ['C'])
-        (m,) = kerns.shape
-        (d, s) = Xtr_s.shape
-        (d, nte) = Xte.shape
         return _test_mkl(nte, 
                          in_Sigma,  
                          in_alpha_s,
