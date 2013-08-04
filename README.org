@@ -38,7 +38,7 @@
    bottleneck lies in updating the scratch space, which
    only takes $O(mn \log(mn))$ time and $O(mn)$ space.
 
-** TODO [0/2]
+** TODO List of todos: [0/2]
    - [ ] Update for C++11
    - [ ] Add parallel implementation (using a graph
      computation library)
