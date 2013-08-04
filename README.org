@@ -40,5 +40,41 @@
 
 ** TODO List of todos: [0/2]
    - [ ] Update for C++11
-   - [ ] Add parallel implementation (using a graph
-     computation library)
+   - [ ] Add parallel implementation (using a BSP
+     framework)
+
+** Parallel notes:
+
+*** Graph (BSP), vertex for every point
+    Hopefully is broadcast-capable and does not need to
+    be made into a clique; also possible to make a
+    "broadcast node" but hopefully there is no
+    "bottlenecking" effect in the underlying
+    implementation
+
+**** Constructs:
+     - primal_var: basically needs to be broadcast to
+       every vertex -- this is how the vertices update
+       their weights and get what they need for the
+       oracle
+     - is_pos, is_neg, entropy: utility funs
+     - oracle: this is an aggregation/reduction -- it
+       takes g and y values from each vertex and
+       produces the top g corresponding to +y and the
+       top g corresponding to -y. It produces the
+       corresponding vertices that maximize g for +/-
+       y.
+       - Idea: could probably implement two separate
+         aggreagators for this.
+       - if the maxima sum to less than -2, all
+         vertices should vote to finish and produce
+         failure.
+     - exponentiateM: another aggregation/reduction --
+       produces the primal variable
+     - scratch (Galpha/alGal): the complicated part of
+       the parallel version
+       - vertex computes its elements of each gram
+         column (+/-, for every kernel)
+       - produces an update for all the alGal that gets
+         aggregated and added to the old values
+       - maintains its own row of Galpha

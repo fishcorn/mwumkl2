@@ -82,7 +82,10 @@ namespace {
   }
 
   template < typename Iter >
-  double entropy(Iter b, Iter e) { return entropy(b, e, &id_fun); }
+  double entropy(Iter b, Iter e) { 
+    return entropy(b, e, &id_fun); 
+  }
+
   bool oracle(std::pair<int, int> & alhat_idx, // OUTPUT
               const std::vector<double> & g,   // INPUT
               const int * const y,             // INPUT
@@ -132,7 +135,7 @@ namespace {
                      const int m,                        // INPUT
                      const double rho,                   // INPUT
                      const double epsp,                  // INPUT
-                     const int t,                        // INPUT
+                     const int t,                        // INPUT (UNUSED)
                      const double cutoff,                // INPUT
                      const int verbose = 0)              // INPUT
   {
