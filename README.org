@@ -3,3 +3,42 @@
 * mwumkl2
 
   Latest code for MWU-MKL project.
+
+** Description
+
+   This code contains a native C++ implementation and
+   some python bindings aimed toward use with numpy and
+   scikit-learn, along with some older MATLAB bindings
+   (although I recommend using the newer python
+   interface).
+
+   You can find an arXiv preprint of the relevant paper
+   at: 
+
+   http://arxiv.org/abs/1206.5580
+
+** Algorithm Overview
+
+   This algorithm is built by combining
+   - Arora & Kale's work on matrix multiplicative
+     weight updates for solving /semidefinite programs/
+     (SDPs) and
+   - Lanckriet et al.'s positive linear combination
+     formulation of the /multiple kernel learning/
+     problem; this can be expressed as a /quadratically
+     constrained quadratic program/ (QCQP), which can
+     be transformed into an SDP.
+
+   Arora & Kale's framework requires computing a
+   /matrix exponential/, which can be expensive unless
+   approximated. The beauty of our algorithm is that we
+   have a closed form of the exponential that takes
+   linear time in the number of input points to
+   compute. This is a huge win because now the
+   bottleneck lies in updating the scratch space, which
+   only takes $O(mn \log(mn))$ time and $O(mn)$ space.
+
+** TODO [0/2]
+   - [ ] Update for C++11
+   - [ ] Add parallel implementation (using a graph
+     computation library)
